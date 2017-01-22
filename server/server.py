@@ -2,40 +2,36 @@ import socket
 import thread
 from http import handler
 import threading
+import tcp_socket
 
 
 class HTTPServer(threading.Thread):
 
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, document_root):
         threading.Thread.__init__(self)
         self.ip = ip
         self.port = port
+        self.document_root = document_root
+
+    def get_doc_root(self):
+        return self.document_root
 
     def run(self):
         server_addr = (self.ip, self.port)
-        server_socket = self.tcp_socket()
+        server_socket = tcp_socket.create_ipv4_server()
         try:
             server_socket.bind(server_addr)
-            server_socket.listen(5)
+            server_socket.listen(0)
         except socket.error, e:
             if e.errno == 98:
-                print "Address already in use"
+                print "Address already in use ( %s : %d )" % (self.ip, self.port)
                 exit(1)
 
-        print "listening on ", self.port
+        print "server listening on ( %s : %d )" % (self.ip, self.port)
 
         while True:
-            thread.start_new_thread(handler.process_request, server_socket.accept())
-
-    def tcp_socket(self):
-        return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            thread.start_new_thread(handler.process_request, (server_socket.accept(), self))
 
 
-threads = []
-for i in [8090, 8091]:
-    server_thread = HTTPServer('127.0.0.1', i)
-    server_thread.start()
-    threads.append(server_thread)
-
-for i in threads:
-    i.join()
+server = HTTPServer('127.0.0.1', 8080, '/home/imran/Desktop/')
+server.start()
