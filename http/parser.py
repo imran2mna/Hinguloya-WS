@@ -3,17 +3,26 @@ from meta import *
 
 
 class ServerHttpRequest:
+
     def __init__(self, msg):
         # http request contains two parts - header, body
         request_structure = msg.split(TAGS.BODY_SEPARATOR)
         # extract header records
         headers = request_structure[0].split(TAGS.LINE_SEPARATOR)
 
-        # first line describes HTTP 'GET / HTTP/1.0'
-        proto_descriptors = headers[0].split(TAGS.WHITE_SPACE)
-        self.method = proto_descriptors[0]
-        self.location = proto_descriptors[1]
-        self.proto_version = float(proto_descriptors[2].split(TAGS.URL_ROOT)[1])
+        self.method = None
+        self.location = None
+        self.proto_version = HTTP.VERSION_1_1
+
+        try:
+            # first line describes HTTP 'GET / HTTP/1.0'
+            proto_descriptors = headers[0].split(TAGS.WHITE_SPACE)
+            self.method = proto_descriptors[0]
+            self.location = proto_descriptors[1]
+            self.proto_version = float(proto_descriptors[2].split(TAGS.URL_ROOT)[1])
+        except IndexError, ie:
+            # print ie.message
+            print "Index error - ", msg
 
         self.user_agent = None
         self.accept_encoding = None
@@ -30,7 +39,7 @@ class ServerHttpRequest:
         try:
             self.body = request_structure[1]
         except IndexError, e:
-            #   print "request body not available"
+            print "request body not available"
             pass
 
     def get_method(self):
@@ -63,7 +72,7 @@ class ServerHttpRequest:
 
 
 class ServerHttpResponse:
-    def __init__(self, status, content,  protocol=1.1, server_name=SERVER_NAME):
+    def __init__(self, status, content,  protocol=HTTP.VERSION_1_1, server_name=SERVER_NAME):
         self.protocol = protocol
         self.status = status
         self.content = content

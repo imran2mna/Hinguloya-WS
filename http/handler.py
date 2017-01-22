@@ -1,26 +1,23 @@
 from file.content import ContentManager
 from parser import ServerHttpRequest, ServerHttpResponse
+from conf.basic import SUPRESS_EXCEPTION
 
 
-def process_request(client_socket, addr):
-    req_msg = read_socket(client_socket)
-    # try:
+def process_request((client_socket, addr), server):
+    try:
+        req_msg = read_socket(client_socket)
 
-    http_req = ServerHttpRequest(req_msg)
-    proto_version = http_req.get_proto_version()
+        http_req = ServerHttpRequest(req_msg)
+        proto_version = http_req.get_proto_version()
 
-    status, content = ContentManager(http_req.get_url()).read()
+        status, content = ContentManager(http_req.get_url(), server.get_doc_root()).read()
 
-    http_res = ServerHttpResponse(status, content, proto_version)
+        http_res = ServerHttpResponse(status, content, proto_version)
 
-    client_socket.send(http_res.generate_response())
-
-    # except Exception, e:
-    #     msg = server_http_response.get_status(HTTPStatus.SERVER_ERROR)
-    #     input_socket.send(msg)
-    #     input_socket.send("server : PYTHON \r")
-    #     input_socket.send("\n\r\n")
-    #     input_socket.send("Internal Error")
+        client_socket.send(http_res.generate_response())
+    except Exception, e:
+        if not SUPRESS_EXCEPTION:
+            print e.message
 
 
 def read_socket(input_socket):
