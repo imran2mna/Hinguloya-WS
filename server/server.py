@@ -32,6 +32,3 @@ class HTTPServer(threading.Thread):
         while True:
             thread.start_new_thread(handler.process_request, (server_socket.accept(), self))
 
-
-server = HTTPServer('127.0.0.1', 8080, '/home/imran/Desktop/')
-server.start()
